@@ -1,0 +1,86 @@
+---
+title: "case study"
+author: "Yuning Wang"
+date: "10/8/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyverse)
+library(ggridges)
+```
+
+## Do some data 
+
+import data
+
+```{r}
+library(p8105.datasets)
+
+data(nyc_airbnb)
+```
+
+* how are air bnb prices related to rent in the neighborhood?
+* which neighborhood is most expensive and which is cheapest?
+* do hosts with multiple sites have higher prices or ratings?
+* does price have any relation to ratings?
+* is average length of stay related to neighborhood? price? etc?
+
+
+## let's answer some questions
+
+```{r}
+nyc_airbnb = nyc_airbnb %>% 
+  mutate(
+    stars = review_scores_location / 2,
+    borough = neighbourhood_group
+  )
+```
+
+```{r}
+nyc_airbnb %>% 
+  filter(borough == "Manhattan") %>% 
+  mutate(neighbourhood = fct_reorder(neighbourhood, price), na.rm = TRUE) %>% 
+  ggplot(aes(x = price, y = neighbourhood)) +
+  geom_violin()
+```
+
+
+```{r}
+ave_price = nyc_airbnb %>% 
+  group_by(borough, room_type) %>% 
+  summarize(average_price = mean(price)) %>% 
+  pivot_wider(
+    names_from = room_type,
+    values_from = average_price
+  )
+```
+
+```{r}
+library(leaflet)
+pal = colorNumeric(
+  palette = "viridis",
+  domain = nyc_airbnb$stars
+)
+nyc_airbnb %>% 
+  filter(
+    borough == "Manhattan",
+    price >2000) %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addProviderTiles(providers$CartoDB.Positron) %>% 
+  addCircleMarkers(~lat, ~long, 
+                   radius = 1,
+                   )
+```
+
+
+
+
+
+
+
+
